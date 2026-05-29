@@ -137,6 +137,7 @@ contrib$mes_atual |>
   dplyr::select(grupo, variacao, peso, contribuicao) |>
   dplyr::arrange(dplyr::desc(contribuicao)) |>
   dplyr::mutate(
+    grupo        = stringr::str_replace(grupo, "^(\\d+)\\.", "\\1. "),
     variacao     = formatC(variacao,     digits = 2, format = "f"),
     peso         = formatC(peso,         digits = 2, format = "f"),
     contribuicao = formatC(contribuicao, digits = 2, format = "f")
@@ -147,7 +148,7 @@ contrib$mes_atual |>
   )
 ```
 
-O grupo com maior contribuição positiva em `r mes_ref` foi **`r contrib$mes_atual |> dplyr::slice_max(contribuicao, n = 1) |> dplyr::pull(grupo)`**, enquanto o maior alívio partiu de **`r contrib$mes_atual |> dplyr::slice_min(contribuicao, n = 1) |> dplyr::pull(grupo)`**. Essa leitura desagregada é fundamental para distinguir pressões difusas — quando vários grupos pressionam simultaneamente — de choques concentrados em segmentos específicos, que tendem a ser mais transitórios.
+O grupo com maior contribuição positiva em `r mes_ref` foi **`r contrib$mes_atual |> dplyr::slice_max(contribuicao, n = 1) |> dplyr::pull(grupo) |> stringr::str_remove("^\\d+\\.")`**, enquanto o maior alívio partiu de **`r contrib$mes_atual |> dplyr::slice_min(contribuicao, n = 1) |> dplyr::pull(grupo) |> stringr::str_remove("^\\d+\\.")`**. Essa leitura desagregada é fundamental para distinguir pressões difusas — quando vários grupos pressionam simultaneamente — de choques concentrados em segmentos específicos, que tendem a ser mais transitórios.
 
 ---
 
