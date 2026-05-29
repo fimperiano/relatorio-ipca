@@ -108,7 +108,7 @@ grafico_ipca_12m <- function(df, df_meta) {
   dados <- df |>
     dplyr::filter(
       !is.na(.data$ipca_12m),
-      .data$data >= as.Date("2000-01-01")
+      .data$data >= as.Date("1999-12-01")
     ) |>
     dplyr::mutate(ano = lubridate::year(.data$data)) |>
     dplyr::left_join(meta_anual, by = "ano") |>
@@ -154,8 +154,9 @@ grafico_ipca_12m <- function(df, df_meta) {
       values = c("IPCA 12m" = cor_primaria, "Meta" = cor_verde)
     ) +
     ggplot2::scale_x_date(
-      date_breaks = "1 year",
-      date_labels = "%Y"
+      date_breaks       = "2 years",
+      date_minor_breaks = "1 year",
+      date_labels       = "%Y"
     ) +
     ggplot2::scale_y_continuous(
       labels = scales::label_number(decimal.mark = ",", suffix = "%")
@@ -165,7 +166,13 @@ grafico_ipca_12m <- function(df, df_meta) {
       x     = NULL,
       y     = "Variação acumulada (% a.a.)"
     ) +
-    tema_base()
+    tema_base() +
+    ggplot2::theme(
+      panel.grid.minor.x = ggplot2::element_line(
+        color     = "#e5e7eb",
+        linewidth = 0.3
+      )
+    )
 
   salvar_png_(p, "grafico_ipca_12m")
 }
