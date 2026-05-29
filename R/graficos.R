@@ -90,7 +90,7 @@ grafico_ipca_mensal <- function(df) {
 #' Plota a série de acumulado 12m junto à meta anual (expandida para
 #' frequência mensal) e a banda de tolerância de ±1,5 p.p. em torno
 #' da meta. Uma caixa de anotação exibe o último valor disponível
-#' no canto superior esquerdo do painel.
+#' no canto superior direito do painel.
 #'
 #' @param df      Tibble com colunas: data (Date), ipca_12m (numeric)
 #' @param df_meta Tibble com colunas: data (Date), meta_inflacao (numeric)
@@ -108,11 +108,7 @@ grafico_ipca_12m <- function(df, df_meta) {
 
   ultimo       <- dplyr::slice_tail(dados, n = 1)
   ultimo_valor <- formatC(ultimo$ipca_12m, digits = 2, format = "f")
-  ultimo_data  <- format(ultimo$data, "%b/%Y")
-  anotacao     <- paste0(ultimo_valor, "%\n", ultimo_data)
-
-  intervalo  <- as.numeric(max(dados$data) - min(dados$data))
-  x_anotacao <- min(dados$data) + intervalo * 0.02
+  anotacao     <- paste0(ultimo_valor, "%")
 
   p <- ggplot2::ggplot(dados, ggplot2::aes(x = .data$data)) +
     ggplot2::geom_ribbon(
@@ -136,10 +132,10 @@ grafico_ipca_12m <- function(df, df_meta) {
     ) +
     ggplot2::annotate(
       "label",
-      x          = x_anotacao,
+      x          = max(dados$data),
       y          = max(dados$ipca_12m, na.rm = TRUE),
       label      = anotacao,
-      hjust      = 0,
+      hjust      = 1,
       vjust      = 1,
       size       = 3,
       color      = cor_primaria,
