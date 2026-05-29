@@ -103,7 +103,10 @@ grafico_ipca_12m <- function(df, df_meta) {
     )
 
   dados <- df |>
-    dplyr::filter(!is.na(.data$ipca_12m)) |>
+    dplyr::filter(
+      !is.na(.data$ipca_12m),
+      .data$data >= as.Date("1999-01-01")
+    ) |>
     dplyr::left_join(meta_mensal, by = "data")
 
   ultimo       <- dplyr::slice_tail(dados, n = 1)
