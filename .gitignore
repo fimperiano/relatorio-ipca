@@ -1,0 +1,20 @@
+# R
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# Quarto
+_freeze/
+.quarto/
+*_files/
+*.knit.md
+
+# Saídas geradas (recriadas ao renderizar)
+output/
+relatorio_ipca.html
+
+# Sistema operacional
+.DS_Store
+Thumbs.db

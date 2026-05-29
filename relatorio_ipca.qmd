@@ -1,0 +1,157 @@
+---
+title: "Relatório Mensal do IPCA"
+subtitle: "Inflação ao Consumidor — Brasil"
+---
+
+```{r setup}
+#| include: false
+
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(scales)
+
+source("R/coleta.R")
+source("R/tratamento.R")
+source("R/graficos.R")
+
+# Coleta
+df_ipca   <- coletar_ipca_mensal()
+df_meta   <- coletar_meta_inflacao()
+df_grupos <- coletar_ipca_grupos()
+
+# Tratamento
+df_ipca_tratado <- df_ipca |>
+  calcular_acumulado_12m() |>
+  calcular_acumulado_ano()
+
+df_saz       <- preparar_sazonal(df_ipca, ano_inicio = 2015)
+contrib      <- preparar_contribuicoes(df_grupos)
+df_ipca_meta <- preparar_meta_mensal(df_ipca_tratado, df_meta)
+
+# Geração e salvamento dos gráficos em output/
+grafico_ipca_mensal(df_ipca)
+grafico_ipca_12m(df_ipca_tratado, df_meta)
+grafico_sazonal(df_saz)
+grafico_contribuicoes(contrib$mes_atual)
+
+# Variáveis para inline code
+mes_ref      <- format(max(df_ipca$data), "%B de %Y")
+ipca_ultimo  <- tail(df_ipca$ipca_mm, 1)
+ipca_12m_ult <- tail(na.omit(df_ipca_tratado$ipca_12m), 1)
+ipca_ano_ult <- tail(na.omit(df_ipca_tratado$ipca_ano), 1)
+meta_atual   <- df_meta |>
+  filter(year(data) == year(max(df_ipca$data))) |>
+  pull(meta_inflacao) |>
+  tail(1)
+
+serie_12m     <- na.omit(df_ipca_tratado$ipca_12m)
+ipca_12m_3m   <- serie_12m[length(serie_12m) - 3]
+tendencia_12m <- if (ipca_12m_ult > ipca_12m_3m) {
+  "pressão inflacionária ainda presente"
+} else {
+  "processo de desinflação em curso"
+}
+
+status_meta <- if (
+  ipca_12m_ult <= meta_atual + 1.5 && ipca_12m_ult >= meta_atual - 1.5
+) {
+  "dentro da banda de tolerância"
+} else if (ipca_12m_ult > meta_atual + 1.5) {
+  "acima do teto da banda de tolerância"
+} else {
+  "abaixo do piso da banda de tolerância"
+}
+
+tendencia_mm <- if (
+  mean(tail(df_ipca$ipca_mm, 6), na.rm = TRUE) >
+  mean(tail(df_ipca$ipca_mm, 12), na.rm = TRUE)
+) "aponta para aceleração" else "aponta para desaceleração"
+```
+
+## Introdução
+
+Este relatório apresenta uma leitura analítica do Índice Nacional de Preços ao Consumidor Amplo (IPCA) com base nos dados mais recentes divulgados pelo IBGE. Todas as séries são obtidas diretamente das fontes oficiais — Banco Central do Brasil e SIDRA/IBGE — e atualizadas automaticamente a cada nova publicação.
+
+Em `r mes_ref`, o IPCA registrou variação de **`r formatC(ipca_ultimo, digits = 2, format = "f")`%** no mês. No acumulado do ano, o índice soma **`r formatC(ipca_ano_ult, digits = 2, format = "f")`%**, enquanto o acumulado em 12 meses alcança **`r formatC(ipca_12m_ult, digits = 2, format = "f")`%** — `r status_meta` definida pelo Conselho Monetário Nacional, cuja meta para o ano é de **`r formatC(meta_atual, digits = 1, format = "f")`%**.
+
+O relatório está organizado em quatro blocos analíticos: variação mensal recente, trajetória acumulada em 12 meses frente à meta, padrão sazonal histórico e decomposição por grupos de despesa. A leitura conjunta dessas dimensões permite identificar tendências de curto prazo, pressões pontuais e a dinâmica subjacente da inflação ao consumidor no Brasil.
+
+---
+
+## Panorama Mensal
+
+```{r grafico-mensal}
+#| echo: false
+knitr::include_graphics("output/grafico_ipca_mensal.png")
+```
+
+A variação mensal do IPCA nos últimos 24 meses evidencia o ritmo corrente da inflação ao consumidor. Em `r mes_ref`, a variação de `r formatC(ipca_ultimo, digits = 2, format = "f")`% `r if (ipca_ultimo > 0) "reflete pressões" else "indica alívio"` sobre o orçamento das famílias brasileiras. A leitura mês a mês é volátil por natureza — influenciada por fatores sazonais, choques de oferta e reajustes de preços administrados — razão pela qual a análise acumulada complementa o panorama.
+
+A comparação visual das barras permite identificar meses com acelerações ou desacelerações pontuais, bem como eventuais deflações. O período recente `r tendencia_mm` em relação à média dos últimos 12 meses, sinal que o acumulado em 12 meses confirmará ou relativizará na seção seguinte.
+
+---
+
+## Acumulado em 12 Meses
+
+```{r grafico-12m}
+#| echo: false
+knitr::include_graphics("output/grafico_ipca_12m.png")
+```
+
+O IPCA acumulado em 12 meses é a medida de referência para o regime de metas de inflação adotado pelo Brasil. O Banco Central do Brasil opera o regime de metas definidas pelo Conselho Monetário Nacional, com meta central de `r formatC(meta_atual, digits = 1, format = "f")`% e intervalo de tolerância de ±1,5 ponto percentual. A faixa sombreada no gráfico delimita esse corredor: valores dentro da banda indicam cumprimento do objetivo de política monetária.
+
+O acumulado em 12 meses até `r mes_ref` é de **`r formatC(ipca_12m_ult, digits = 2, format = "f")`%**. A trajetória recente da curva sinaliza `r tendencia_12m`, o que condiciona a avaliação do Comitê de Política Monetária (Copom) sobre a orientação futura da taxa Selic. Variações na meta ao longo do tempo refletem as revisões anuais decididas pelo CMN.
+
+---
+
+## Sazonalidade
+
+```{r grafico-sazonal}
+#| echo: false
+knitr::include_graphics("output/grafico_sazonal.png")
+```
+
+O gráfico sazonal sobrepõe o perfil mensal do IPCA de cada ano desde 2015, permitindo identificar padrões recorrentes ao longo do calendário. Meses como janeiro e março costumam concentrar reajustes de mensalidades escolares, tarifas de energia elétrica e outros preços administrados, pressionando o índice no início do ano. O segundo semestre, por sua vez, tende a apresentar alívio relativo em determinados grupos, especialmente alimentação.
+
+A linha em destaque representa o ano corrente. Sua comparação com os anos anteriores revela se a inflação de `r year(max(df_ipca$data))` segue trajetória típica, mais benigna ou mais pressionada do que o histórico recente. Desvios significativos do padrão sazonal geralmente refletem choques específicos — climáticos, cambiais ou de política de preços — que merecem atenção analítica.
+
+---
+
+## Contribuições por Grupo
+
+```{r grafico-contribuicoes}
+#| echo: false
+knitr::include_graphics("output/grafico_contribuicoes.png")
+```
+
+A decomposição do IPCA por grupos de despesa revela quais segmentos do orçamento familiar mais pressionaram (ou aliviaram) o índice em `r mes_ref`. A contribuição de cada grupo é calculada como o produto de sua variação mensal pelo respectivo peso na cesta de consumo, expresso em pontos percentuais (p.p.). A soma das nove contribuições deve reproduzir a variação total do IPCA no mês.
+
+```{r tabela-contribuicoes}
+contrib$mes_atual |>
+  dplyr::select(grupo, variacao, peso, contribuicao) |>
+  dplyr::arrange(dplyr::desc(contribuicao)) |>
+  dplyr::mutate(
+    variacao     = formatC(variacao,     digits = 2, format = "f"),
+    peso         = formatC(peso,         digits = 2, format = "f"),
+    contribuicao = formatC(contribuicao, digits = 2, format = "f")
+  ) |>
+  knitr::kable(
+    col.names = c("Grupo", "Variação (%)", "Peso (%)", "Contribuição (p.p.)"),
+    align     = c("l", "r", "r", "r")
+  )
+```
+
+O grupo com maior contribuição positiva em `r mes_ref` foi **`r contrib$mes_atual |> dplyr::slice_max(contribuicao, n = 1) |> dplyr::pull(grupo)`**, enquanto o maior alívio partiu de **`r contrib$mes_atual |> dplyr::slice_min(contribuicao, n = 1) |> dplyr::pull(grupo)`**. Essa leitura desagregada é fundamental para distinguir pressões difusas — quando vários grupos pressionam simultaneamente — de choques concentrados em segmentos específicos, que tendem a ser mais transitórios.
+
+---
+
+## Encerramento
+
+O IPCA de `r mes_ref` encerra o mês com variação de `r formatC(ipca_ultimo, digits = 2, format = "f")`%, acumulando `r formatC(ipca_ano_ult, digits = 2, format = "f")`% no ano e `r formatC(ipca_12m_ult, digits = 2, format = "f")`% em 12 meses. A leitura conjunta das dimensões analisadas — variação mensal, acumulado frente à meta, padrão sazonal e decomposição por grupos — oferece uma visão abrangente da dinâmica inflacionária corrente.
+
+Os dados utilizados neste relatório são de acesso público e atualizados automaticamente via APIs do Banco Central do Brasil (séries temporais 433 e 13521) e do IBGE (tabela 7060 do SIDRA). O relatório é gerado com Quarto e publicado via Posit Connect Cloud, garantindo reprodutibilidade e atualização mensal sem intervenção manual no código.
+
+---
+
+*Fontes: IBGE (IPCA — Tabela 7060/SIDRA); Banco Central do Brasil (séries 433 e 13521). Elaboração própria.*

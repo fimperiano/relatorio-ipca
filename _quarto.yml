@@ -1,0 +1,21 @@
+project:
+  type: default
+
+lang: pt-BR
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-title: "Sumário"
+    toc-depth: 2
+    code-fold: true
+    code-summary: "Exibir código"
+    fig-align: center
+    embed-resources: true
+
+execute:
+  freeze: auto
+  echo: true
+  warning: false
+  message: false
