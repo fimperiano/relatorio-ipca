@@ -10,6 +10,7 @@ library(dplyr)
 library(ggplot2)
 library(lubridate)
 library(scales)
+library(plotly)
 
 source("R/coleta.R")
 source("R/tratamento.R")
@@ -29,11 +30,11 @@ df_saz       <- preparar_sazonal(df_ipca, ano_inicio = 2015)
 contrib      <- preparar_contribuicoes(df_grupos)
 df_ipca_meta <- preparar_meta_mensal(df_ipca_tratado, df_meta)
 
-# Geração e salvamento dos gráficos em output/
-grafico_ipca_mensal(df_ipca)
-grafico_ipca_12m(df_ipca_tratado, df_meta)
-grafico_sazonal(df_saz)
-grafico_contribuicoes(contrib$mes_atual)
+# Geração dos gráficos (salva PNGs em output/ e retorna o objeto ggplot)
+p_mensal  <- grafico_ipca_mensal(df_ipca)
+p_12m     <- grafico_ipca_12m(df_ipca_tratado, df_meta)
+p_sazonal <- grafico_sazonal(df_saz)
+p_contrib <- grafico_contribuicoes(contrib$mes_atual)
 
 # Variáveis para inline code
 mes_ref      <- format(max(df_ipca$data), "%B de %Y")
@@ -83,7 +84,7 @@ O relatório está organizado em quatro blocos analíticos: variação mensal re
 
 ```{r grafico-mensal}
 #| echo: false
-knitr::include_graphics("output/grafico_ipca_mensal.png")
+ggplotly(p_mensal, tooltip = c("x", "y")) |> plotly::layout(legend = list(orientation = "h"))
 ```
 
 A variação mensal do IPCA nos últimos 24 meses evidencia o ritmo corrente da inflação ao consumidor. Em `r mes_ref`, a variação de `r formatC(ipca_ultimo, digits = 2, format = "f")`% `r if (ipca_ultimo > 0) "reflete pressões" else "indica alívio"` sobre o orçamento das famílias brasileiras. A leitura mês a mês é volátil por natureza — influenciada por fatores sazonais, choques de oferta e reajustes de preços administrados — razão pela qual a análise acumulada complementa o panorama.
@@ -96,7 +97,7 @@ A comparação visual das barras permite identificar meses com acelerações ou 
 
 ```{r grafico-12m}
 #| echo: false
-knitr::include_graphics("output/grafico_ipca_12m.png")
+ggplotly(p_12m, tooltip = c("x", "y")) |> plotly::layout(legend = list(orientation = "h"))
 ```
 
 O IPCA acumulado em 12 meses é a medida de referência para o regime de metas de inflação adotado pelo Brasil. O Banco Central do Brasil opera o regime de metas definidas pelo Conselho Monetário Nacional, com meta central de `r formatC(meta_atual, digits = 1, format = "f")`% e intervalo de tolerância de ±1,5 ponto percentual. A faixa sombreada no gráfico delimita esse corredor: valores dentro da banda indicam cumprimento do objetivo de política monetária.
@@ -109,7 +110,7 @@ O acumulado em 12 meses até `r mes_ref` é de **`r formatC(ipca_12m_ult, digits
 
 ```{r grafico-sazonal}
 #| echo: false
-knitr::include_graphics("output/grafico_sazonal.png")
+ggplotly(p_sazonal, tooltip = c("x", "y")) |> plotly::layout(legend = list(orientation = "h"))
 ```
 
 O gráfico sazonal sobrepõe o perfil mensal do IPCA de cada ano desde 2015, permitindo identificar padrões recorrentes ao longo do calendário. Meses como janeiro e março costumam concentrar reajustes de mensalidades escolares, tarifas de energia elétrica e outros preços administrados, pressionando o índice no início do ano. O segundo semestre, por sua vez, tende a apresentar alívio relativo em determinados grupos, especialmente alimentação.
@@ -122,7 +123,7 @@ A linha em destaque representa o ano corrente. Sua comparação com os anos ante
 
 ```{r grafico-contribuicoes}
 #| echo: false
-knitr::include_graphics("output/grafico_contribuicoes.png")
+ggplotly(p_contrib, tooltip = c("x", "y")) |> plotly::layout(legend = list(orientation = "h"))
 ```
 
 A decomposição do IPCA por grupos de despesa revela quais segmentos do orçamento familiar mais pressionaram (ou aliviaram) o índice em `r mes_ref`. A contribuição de cada grupo é calculada como o produto de sua variação mensal pelo respectivo peso na cesta de consumo, expresso em pontos percentuais (p.p.). A soma das nove contribuições deve reproduzir a variação total do IPCA no mês.

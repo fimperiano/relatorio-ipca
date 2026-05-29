@@ -15,7 +15,7 @@ salvar_png_ <- function(p, nome, largura = 10, altura = 5.5) {
     height   = altura,
     dpi      = 150
   )
-  invisible(p)
+  p
 }
 
 tema_base <- function() {
@@ -257,7 +257,11 @@ grafico_contribuicoes <- function(df) {
     dados,
     ggplot2::aes(x = .data$contribuicao, y = .data$grupo)
   ) +
-    ggplot2::geom_col(fill = dados$cor_barra, width = 0.6) +
+    ggplot2::geom_col(
+      ggplot2::aes(fill = .data$cor_barra),
+      width = 0.6
+    ) +
+    ggplot2::scale_fill_identity() +
     ggplot2::geom_text(
       ggplot2::aes(
         label = paste0(.data$rotulo, " p.p."),
