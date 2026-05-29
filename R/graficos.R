@@ -96,18 +96,23 @@ grafico_ipca_mensal <- function(df) {
 #' @param df_meta Tibble com colunas: data (Date), meta_inflacao (numeric)
 #' @return Objeto ggplot (salvo em output/grafico_ipca_12m.png)
 grafico_ipca_12m <- function(df, df_meta) {
-  meta_mensal <- df_meta |>
+  # join por ano: série 13521 tem uma observação anual, não mensal
+  meta_anual <- df_meta |>
     dplyr::mutate(
+      ano      = lubridate::year(.data$data),
       meta_sup = .data$meta_inflacao + 1.5,
       meta_inf = .data$meta_inflacao - 1.5
-    )
+    ) |>
+    dplyr::select(ano, meta_inflacao, meta_sup, meta_inf)
 
   dados <- df |>
     dplyr::filter(
       !is.na(.data$ipca_12m),
-      .data$data >= as.Date("1999-01-01")
+      .data$data >= as.Date("2000-01-01")
     ) |>
-    dplyr::left_join(meta_mensal, by = "data")
+    dplyr::mutate(ano = lubridate::year(.data$data)) |>
+    dplyr::left_join(meta_anual, by = "ano") |>
+    dplyr::select(-ano)
 
   ultimo       <- dplyr::slice_tail(dados, n = 1)
   ultimo_valor <- formatC(ultimo$ipca_12m, digits = 2, format = "f")
