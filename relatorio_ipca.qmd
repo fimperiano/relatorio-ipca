@@ -128,6 +128,7 @@ knitr::include_graphics("output/grafico_contribuicoes.png")
 A decomposição do IPCA por grupos de despesa revela quais segmentos do orçamento familiar mais pressionaram (ou aliviaram) o índice em `r mes_ref`. A contribuição de cada grupo é calculada como o produto de sua variação mensal pelo respectivo peso na cesta de consumo, expresso em pontos percentuais (p.p.). A soma das nove contribuições deve reproduzir a variação total do IPCA no mês.
 
 ```{r tabela-contribuicoes}
+#| echo: false
 contrib$mes_atual |>
   dplyr::select(grupo, variacao, peso, contribuicao) |>
   dplyr::arrange(dplyr::desc(contribuicao)) |>

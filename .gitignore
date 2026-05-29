@@ -17,3 +17,6 @@ output/
 # Sistema operacional
 .DS_Store
 Thumbs.db
+
+/.quarto/
+**/*.quarto_ipynb
