@@ -13,7 +13,6 @@ _freeze/
 
 # Saídas geradas (recriadas ao renderizar)
 output/
-relatorio_ipca.html
 
 # Sistema operacional
 .DS_Store
