@@ -97,7 +97,8 @@ A comparação visual das barras permite identificar meses com acelerações ou 
 
 ```{r grafico-12m}
 #| echo: false
-ggplotly(p_12m, tooltip = c("x", "y")) |> plotly::layout(legend = list(orientation = "h"))
+ggplotly(p_12m, tooltip = c("x", "y")) |>
+  plotly::layout(legend = list(orientation = "h", title = list(text = "")))
 ```
 
 O IPCA acumulado em 12 meses é a medida de referência para o regime de metas de inflação adotado pelo Brasil. O Banco Central do Brasil opera o regime de metas definidas pelo Conselho Monetário Nacional, com meta central de `r formatC(meta_atual, digits = 1, format = "f")`% e intervalo de tolerância de ±1,5 ponto percentual. A faixa sombreada no gráfico delimita esse corredor: valores dentro da banda indicam cumprimento do objetivo de política monetária.
