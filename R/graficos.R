@@ -42,11 +42,7 @@ tema_base <- function() {
 grafico_ipca_mensal <- function(df) {
   dados <- df |>
     dplyr::arrange(.data$data) |>
-    dplyr::slice_tail(n = 24) |>
-    dplyr::mutate(
-      rotulo   = formatC(.data$ipca_mm, digits = 2, format = "f"),
-      positivo = .data$ipca_mm >= 0
-    )
+    dplyr::slice_tail(n = 24)
 
   lim_y_min <- min(dados$ipca_mm, na.rm = TRUE)
   lim_y_max <- max(dados$ipca_mm, na.rm = TRUE)
@@ -57,15 +53,6 @@ grafico_ipca_mensal <- function(df) {
     ggplot2::aes(x = .data$data, y = .data$ipca_mm)
   ) +
     ggplot2::geom_col(fill = cor_primaria, width = 20) +
-    ggplot2::geom_text(
-      ggplot2::aes(
-        label = .data$rotulo,
-        vjust = ifelse(.data$positivo, -0.4, 1.3)
-      ),
-      size     = 2.8,
-      color    = cor_primaria,
-      fontface = "bold"
-    ) +
     ggplot2::scale_x_date(
       date_breaks = "3 months",
       date_labels = "%b\n%Y"
@@ -250,7 +237,11 @@ grafico_contribuicoes <- function(df) {
       grupo     = stringr::str_wrap(.data$grupo, width = 28),
       grupo     = forcats::fct_reorder(.data$grupo, .data$contribuicao),
       cor_barra = ifelse(.data$contribuicao >= 0, cor_primaria, cor_laranja),
-      rotulo    = formatC(.data$contribuicao, digits = 2, format = "f")
+      tooltip   = paste0(
+        "Contribuição: ",
+        formatC(.data$contribuicao, digits = 2, format = "f"),
+        " p.p."
+      )
     )
 
   p <- ggplot2::ggplot(
@@ -258,18 +249,10 @@ grafico_contribuicoes <- function(df) {
     ggplot2::aes(x = .data$contribuicao, y = .data$grupo)
   ) +
     ggplot2::geom_col(
-      ggplot2::aes(fill = .data$cor_barra),
+      ggplot2::aes(fill = .data$cor_barra, text = .data$tooltip),
       width = 0.6
     ) +
     ggplot2::scale_fill_identity() +
-    ggplot2::geom_text(
-      ggplot2::aes(
-        label = paste0(.data$rotulo, " p.p."),
-        hjust = ifelse(.data$contribuicao >= 0, -0.1, 1.1)
-      ),
-      size  = 3,
-      color = cor_cinza
-    ) +
     ggplot2::scale_x_continuous(
       expand = ggplot2::expansion(mult = c(0.05, 0.25)),
       labels = scales::label_number(

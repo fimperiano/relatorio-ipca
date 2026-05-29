@@ -123,8 +123,10 @@ A linha em destaque representa o ano corrente. Sua comparação com os anos ante
 
 ```{r grafico-contribuicoes}
 #| echo: false
-ggplotly(p_contrib, tooltip = c("x", "y")) |> plotly::layout(legend = list(orientation = "h"))
+ggplotly(p_contrib, tooltip = "text") |> plotly::layout(legend = list(orientation = "h"))
 ```
+
+<br>
 
 A decomposição do IPCA por grupos de despesa revela quais segmentos do orçamento familiar mais pressionaram (ou aliviaram) o índice em `r mes_ref`. A contribuição de cada grupo é calculada como o produto de sua variação mensal pelo respectivo peso na cesta de consumo, expresso em pontos percentuais (p.p.). A soma das nove contribuições deve reproduzir a variação total do IPCA no mês.
 
